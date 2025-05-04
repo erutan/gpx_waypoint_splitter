@@ -4,22 +4,20 @@ I had a GPX file with more than 15k waypoints I needed to import to a service th
 
 Thanks Claude!
 
-```
-# Basic usage (default: 1000 waypoints per file)
-python gpx_splitter.py tracking_data.gpx
+## Useage
 
-# With custom output prefix
-python gpx_splitter.py tracking_data.gpx hiking_segments
+Basic usage (default: 1000 waypoints per file):
+`python gpx_waypoint_splitter.py MYFILE.gpx`
 
-# Specifying 500 waypoints per file
-python gpx_splitter.py tracking_data.gpx --waypoints-per-file 500
-# OR using the short form
-python gpx_splitter.py tracking_data.gpx -w 500
+If you want to have the base output filename be different from your input, add your desired filename after the input:
+`python gpx_waypoint_splitter.py MYFILE.gpx new_name`
 
-# Combining custom prefix and waypoints per file
-python gpx_splitter.py tracking_data.gpx hiking_segments -w 2000
-```
+You can change how many waypoints per file by passing the number as an argument to the -w flag, 500 in this case:
+`python gpx_waypoint_splitter.py MYFILE.gpx -w 500`
 
-### MacOS Notes
+If you wanted to output new_name_001.gpx and new_name_002.gpx etc with 2000 waypoints each you'd use the following:
+`python gpx_waypoint_splitter.py MYFILE.gpx new_name -w 2000`
+
+## MacOS Notes
 
 You can install Python via the [homebrew](https://brew.sh/) package manager. Unless you create an alias in your shell, you'll need to replace 'python' with 'python3' in the commands above.

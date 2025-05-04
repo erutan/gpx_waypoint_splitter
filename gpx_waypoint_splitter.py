@@ -37,12 +37,13 @@ def parse_gpx(gpx_file):
             if waypoints:
                 ns = {}  # Empty namespace
         
-        print(f"Found {len(waypoints)} waypoints in {gpx_file}")
+        waypoint_count = len(waypoints)
+        print(f"Found {waypoint_count} waypoints in {gpx_file}")
         
         # Extract the header structure (everything except waypoints)
         header = root
         
-        return waypoints, header, ns
+        return waypoints, header, ns, waypoint_count
     
     except Exception as e:
         print(f"Error parsing GPX file: {e}")
@@ -54,6 +55,9 @@ def create_output_files(waypoints, header, namespace, output_prefix, waypoints_p
     
     # Calculate number of output files needed
     num_files = (total_waypoints + waypoints_per_file - 1) // waypoints_per_file  # Ceiling division
+    
+    print(f"Splitting {total_waypoints} waypoints into {num_files} files with up to {waypoints_per_file} waypoints each")
+    total_written = 0
     
     # Create each output file
     for file_num in range(num_files):
@@ -82,7 +86,15 @@ def create_output_files(waypoints, header, namespace, output_prefix, waypoints_p
         ET.register_namespace('', namespace.get('gpx', ''))
         tree.write(output_file, encoding='utf-8', xml_declaration=True)
         
-        print(f"Created {output_file} with {len(current_waypoints)} waypoints")
+        waypoints_in_file = len(current_waypoints)
+        total_written += waypoints_in_file
+        print(f"Created {output_file} with {waypoints_in_file} waypoints (range {start_idx+1}-{end_idx})")
+    
+    print(f"Total waypoints written: {total_written}")
+    if total_written != total_waypoints:
+        print(f"WARNING: Mismatch between parsed waypoints ({total_waypoints}) and written waypoints ({total_written})")
+    
+    return total_written
 
 def main():
     # Set up argument parser
@@ -91,6 +103,8 @@ def main():
     parser.add_argument('output_prefix', nargs='?', help='Prefix for output files (default: input filename)')
     parser.add_argument('--waypoints-per-file', '-w', type=int, default=1000, 
                         help='Number of waypoints per output file (default: 1000)')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Enable verbose output for debugging')
     
     args = parser.parse_args()
     
@@ -100,13 +114,19 @@ def main():
     output_prefix = args.output_prefix if args.output_prefix else os.path.splitext(gpx_file)[0]
     
     # Parse the GPX file
-    waypoints, header, namespace = parse_gpx(gpx_file)
+    waypoints, header, namespace, waypoint_count = parse_gpx(gpx_file)
+    
+    if args.verbose:
+        print(f"Detailed waypoints information:")
+        print(f"Total waypoints array length: {len(waypoints)}")
+        print(f"First waypoint index: 0, Last waypoint index: {len(waypoints) - 1}")
     
     # Create output files
-    create_output_files(waypoints, header, namespace, output_prefix, args.waypoints_per_file)
+    total_written = create_output_files(waypoints, header, namespace, output_prefix, args.waypoints_per_file)
     
     print(f"Successfully split {gpx_file} into multiple files with prefix '{output_prefix}'")
     print(f"Each file contains up to {args.waypoints_per_file} waypoints")
+    print(f"Total waypoints processed: {waypoint_count}, Total waypoints written: {total_written}")
 
 if __name__ == "__main__":
     main()
